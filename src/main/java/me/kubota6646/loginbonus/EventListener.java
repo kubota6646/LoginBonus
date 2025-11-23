@@ -350,21 +350,30 @@ public class EventListener implements Listener {
         // ログイン開始時間を記録
         loginTimes.put(playerId, System.currentTimeMillis());
 
-        // ボスバーを作成
+        // ボスバーの表示設定を確認
+        boolean bossBarEnabled = plugin.getConfig().getBoolean("boss-bar-enabled", true);
+        
+        // ボスバータイトルテンプレートは常に取得（ボスバー有効時に使用）
         String bossBarTitleTemplate = plugin.getConfig().getString("boss-bar-title", "&a報酬まで残り: %remaining%");
-        String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
-        String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
-        BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
-        BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
-        double remainingMinutes = targetMinutes - cumulativeMinutes;
-        int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
-        String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
-        BossBar bossBar = plugin.getServer().createBossBar(ChatColor.translateAlternateColorCodes('&', title), bossBarColor, bossBarStyle);
-        bossBar.setProgress(Math.min(cumulativeMinutes / targetMinutes, 1.0));
-        bossBar.addPlayer(player);
-        bossBars.put(playerId, bossBar);
+        
+        BossBar bossBar = null;
+        if (bossBarEnabled) {
+            // ボスバーを作成
+            String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
+            String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
+            BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
+            BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+            double remainingMinutes = targetMinutes - cumulativeMinutes;
+            int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
+            String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
+            bossBar = plugin.getServer().createBossBar(ChatColor.translateAlternateColorCodes('&', title), bossBarColor, bossBarStyle);
+            bossBar.setProgress(Math.min(cumulativeMinutes / targetMinutes, 1.0));
+            bossBar.addPlayer(player);
+            bossBars.put(playerId, bossBar);
+        }
 
         // 毎秒更新タスク
+        final BossBar finalBossBar = bossBar;
         BukkitTask updateTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -388,21 +397,25 @@ public class EventListener implements Listener {
                     cumulativeMinutesMap.put(playerId, 0.0);
                     // ログイン開始時間を現在時刻にリセット
                     loginTimes.put(playerId, System.currentTimeMillis());
-                    // ボスバーを更新
-                    double newCumulativeMinutes = 0.0;
-                    double newRemainingMinutes = targetMinutes - newCumulativeMinutes;
-                    int newRemainingSeconds = (int) Math.ceil(Math.max(newRemainingMinutes, 0.0) * 60);
-                    String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(newRemainingSeconds));
-                    bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
-                    bossBar.setProgress(0.0);
+                    // ボスバーを更新（ボスバー有効時のみ）
+                    if (finalBossBar != null) {
+                        double newCumulativeMinutes = 0.0;
+                        double newRemainingMinutes = targetMinutes - newCumulativeMinutes;
+                        int newRemainingSeconds = (int) Math.ceil(Math.max(newRemainingMinutes, 0.0) * 60);
+                        String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(newRemainingSeconds));
+                        finalBossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
+                        finalBossBar.setProgress(0.0);
+                    }
                     // 累積時間をリセット
                     currentCumulative = 0.0;
                 }
 
-                // ボスバーを更新
-                String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(currentRemainingSeconds));
-                bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
-                bossBar.setProgress(Math.min(currentCumulative / targetMinutes, 1.0));
+                // ボスバーを更新（ボスバー有効時のみ）
+                if (finalBossBar != null) {
+                    String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(currentRemainingSeconds));
+                    finalBossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
+                    finalBossBar.setProgress(Math.min(currentCumulative / targetMinutes, 1.0));
+                }
 
                 // 目標に達したら報酬を与える
                 if (currentCumulative >= targetMinutes) {
