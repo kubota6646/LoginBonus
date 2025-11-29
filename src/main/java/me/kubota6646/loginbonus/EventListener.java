@@ -48,10 +48,14 @@ public class EventListener implements Listener {
                 try {
                     boolean synced = plugin.getStorage().syncPlayerData(playerId);
                     if (!synced) {
-                        plugin.getLogger().warning("プレイヤー " + player.getName() + " のデータ同期に失敗しました。ローカルデータを使用します。");
+                        plugin.getLogger().warning(plugin.getMessage("auto-sync-failed", 
+                            "&eプレイヤー %player% のデータ同期に失敗しました。ローカルデータを使用します。",
+                            "%player%", player.getName()));
                     }
                 } catch (Exception e) {
-                    plugin.getLogger().severe("プレイヤー " + player.getName() + " のデータ同期中にエラーが発生しました: " + e.getMessage());
+                    plugin.getLogger().severe(plugin.getMessage("auto-sync-error",
+                        "&cプレイヤー %player% のデータ同期中にエラーが発生しました: %error%",
+                        "%player%", player.getName(), "%error%", e.getMessage()));
                 }
                 // 同期完了後（成功/失敗に関わらず）、メインスレッドでトラッキングを開始
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
