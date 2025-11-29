@@ -40,12 +40,27 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // MySQL使用時は自動同期
+        // MySQL使用時は非同期で自動同期
         String storageType = plugin.getConfig().getString("storage-type", "yaml").toLowerCase();
         if (storageType.equals("mysql")) {
-            plugin.getStorage().syncPlayerData(playerId);
+            // 非同期でデータを同期し、完了後にメインスレッドでトラッキングを開始
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                plugin.getStorage().syncPlayerData(playerId);
+                // 同期完了後、メインスレッドでトラッキングを開始
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    // プレイヤーがまだオンラインか確認
+                    if (player.isOnline()) {
+                        setupPlayerTracking(player, playerId);
+                    }
+                });
+            });
+        } else {
+            // MySQL以外の場合は同期的にトラッキングを開始
+            setupPlayerTracking(player, playerId);
         }
+    }
 
+    private void setupPlayerTracking(Player player, UUID playerId) {
         // 現在のリセット日付を取得
         String today = plugin.getResetDate();
         currentDates.put(playerId, today);
