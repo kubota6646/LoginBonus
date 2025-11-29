@@ -45,8 +45,15 @@ public class EventListener implements Listener {
         if (storageType.equals("mysql")) {
             // 非同期でデータを同期し、完了後にメインスレッドでトラッキングを開始
             plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                plugin.getStorage().syncPlayerData(playerId);
-                // 同期完了後、メインスレッドでトラッキングを開始
+                try {
+                    boolean synced = plugin.getStorage().syncPlayerData(playerId);
+                    if (!synced) {
+                        plugin.getLogger().warning("プレイヤー " + player.getName() + " のデータ同期に失敗しました。ローカルデータを使用します。");
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().severe("プレイヤー " + player.getName() + " のデータ同期中にエラーが発生しました: " + e.getMessage());
+                }
+                // 同期完了後（成功/失敗に関わらず）、メインスレッドでトラッキングを開始
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     // プレイヤーがまだオンラインか確認
                     if (player.isOnline()) {
