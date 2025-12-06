@@ -287,13 +287,28 @@ public class EventListener implements Listener {
     private void saveCumulativeTime(UUID playerId) {
         Long loginStart = loginTimes.get(playerId);
         if (loginStart == null || loginStart == 0L) return;
-        long start = loginStart;
+        
+        // cumulativeMinutesMapから現在のセッション開始時の累積時間を取得
+        Double baseCumulative = cumulativeMinutesMap.get(playerId);
+        if (baseCumulative == null) {
+            baseCumulative = 0.0;
+        }
+        
         long currentTime = System.currentTimeMillis();
-        double additionalMinutes = (currentTime - start) / 60000.0;
-        double savedCumulative = plugin.getStorage().getCumulative(playerId);
-        double newCumulative = savedCumulative + additionalMinutes;
+        double additionalMinutes = (currentTime - loginStart) / 60000.0;
+        double newCumulative = baseCumulative + additionalMinutes;
+        
+        // 累積時間を保存（MySQL使用時は即座にDBに書き込まれる）
         plugin.getStorage().setCumulative(playerId, newCumulative);
-        plugin.savePlayerDataAsync();
+        
+        // MySQL使用時は同期的に保存が完了するのを待つ（サーバー間移動時のデータ損失を防ぐ）
+        String storageType = plugin.getConfig().getString("storage-type", "yaml").toLowerCase();
+        if (storageType.equals("mysql")) {
+            // MySQLは setCumulative で即座に書き込まれるので追加の待機は不要
+            plugin.getLogger().fine("プレイヤー " + playerId + " の累積時間を保存しました: " + newCumulative + " 分");
+        } else {
+            plugin.savePlayerDataAsync();
+        }
     }
 
     public void giveReward(Player player, String today, boolean setLastReward, boolean updateStreak) {
