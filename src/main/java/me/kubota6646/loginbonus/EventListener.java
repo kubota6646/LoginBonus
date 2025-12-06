@@ -43,8 +43,12 @@ public class EventListener implements Listener {
         // MySQL使用時は非同期で自動同期とデータ読み込み
         String storageType = plugin.getConfig().getString("storage-type", "yaml").toLowerCase();
         if (storageType.equals("mysql")) {
-            // 非同期でデータを同期・読み込みし、完了後にメインスレッドでトラッキングを開始
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            // BungeeCord等でのサーバー間移動時、前のサーバーがデータを保存するのを待つために
+            // 少し遅延させてからデータを読み込む（500ms）
+            plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+                // プレイヤーがまだオンラインか確認
+                if (!player.isOnline()) return;
+                
                 try {
                     boolean synced = plugin.getStorage().syncPlayerData(playerId);
                     if (!synced) {
@@ -76,7 +80,7 @@ public class EventListener implements Listener {
                         setupPlayerTrackingWithData(player, playerId, cumulativeMinutes, lastReward);
                     }
                 });
-            });
+            }, 10L); // 10 ticks = 500ms の遅延
         } else {
             // MySQL以外の場合は同期的にトラッキングを開始
             setupPlayerTracking(player, playerId);
