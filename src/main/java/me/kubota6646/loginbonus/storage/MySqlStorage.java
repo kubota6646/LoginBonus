@@ -84,7 +84,7 @@ public class MySqlStorage implements StorageInterface {
     }
     
     private void reconnectIfNeeded() throws SQLException {
-        if (connection == null || connection.isClosed() || !connection.isValid(5)) {
+        if (connection == null || connection.isClosed() || !connection.isValid(1)) {
             plugin.getLogger().warning("MySQL接続が切断されました。再接続を試みます...");
             initialize();
         }
