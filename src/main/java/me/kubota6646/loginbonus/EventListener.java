@@ -40,12 +40,54 @@ public class EventListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        // MySQL使用時は自動同期
+        // MySQL使用時は非同期で自動同期とデータ読み込み
         String storageType = plugin.getConfig().getString("storage-type", "yaml").toLowerCase();
         if (storageType.equals("mysql")) {
-            plugin.getStorage().syncPlayerData(playerId);
+            // BungeeCord等でのサーバー間移動時、前のサーバーがデータを保存するのを待つために
+            // 少し遅延させてからデータを読み込む（500ms）
+            plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+                // プレイヤーがまだオンラインか確認
+                if (!player.isOnline()) return;
+                
+                try {
+                    boolean synced = plugin.getStorage().syncPlayerData(playerId);
+                    if (!synced) {
+                        plugin.getLogger().warning(plugin.getMessage("auto-sync-failed", 
+                            "&eプレイヤー %player% のデータ同期に失敗しました。ローカルデータを使用します。",
+                            "%player%", player.getName()));
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().severe(plugin.getMessage("auto-sync-error",
+                        "&cプレイヤー %player% のデータ同期中にエラーが発生しました: %error%",
+                        "%player%", player.getName(), "%error%", e.getMessage()));
+                }
+                
+                // 非同期スレッドでデータを事前に読み込む（メインスレッドのブロックを防ぐ）
+                final double cumulativeMinutes;
+                final String lastReward;
+                try {
+                    cumulativeMinutes = plugin.getStorage().getCumulative(playerId);
+                    lastReward = plugin.getStorage().getLastReward(playerId);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("プレイヤーデータの読み込みに失敗しました: " + e.getMessage());
+                    return;
+                }
+                
+                // データ読み込み完了後、メインスレッドでトラッキングを開始
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    // プレイヤーがまだオンラインか確認
+                    if (player.isOnline()) {
+                        setupPlayerTrackingWithData(player, playerId, cumulativeMinutes, lastReward);
+                    }
+                });
+            }, 10L); // 10 ticks = 500ms の遅延
+        } else {
+            // MySQL以外の場合は同期的にトラッキングを開始
+            setupPlayerTracking(player, playerId);
         }
+    }
 
+    private void setupPlayerTracking(Player player, UUID playerId) {
         // 現在のリセット日付を取得
         String today = plugin.getResetDate();
         currentDates.put(playerId, today);
@@ -59,6 +101,97 @@ public class EventListener implements Listener {
 
         // 既に達成済みか確認
         String lastReward = plugin.getStorage().getLastReward(playerId);
+        boolean alreadyRewarded = today.equals(lastReward);
+
+        if (alreadyRewarded) {
+            // 既に報酬を受け取っている場合、何もしない
+            return;
+        }
+
+        // ログイン開始時間を記録
+        loginTimes.put(playerId, System.currentTimeMillis());
+
+        // ボスバーを作成
+        String bossBarTitleTemplate = plugin.getConfig().getString("boss-bar-title", "&a報酬まで残り: %remaining%");
+        String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
+        String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
+        BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
+        BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        double remainingMinutes = targetMinutes - cumulativeMinutes;
+        int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
+        String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
+        BossBar bossBar = plugin.getServer().createBossBar(ChatColor.translateAlternateColorCodes('&', title), bossBarColor, bossBarStyle);
+        bossBar.setProgress(Math.min(cumulativeMinutes / targetMinutes, 1.0));
+        bossBar.addPlayer(player);
+        bossBars.put(playerId, bossBar);
+
+        // 毎秒更新タスク
+        BukkitTask updateTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // 現在の累積時間を計算
+                long loginStart = loginTimes.get(playerId);
+                if (loginStart == 0) return;
+                long currentTime = System.currentTimeMillis();
+                double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
+                double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
+                double currentRemaining = targetMinutes - currentCumulative;
+                int currentRemainingSeconds = (int) Math.ceil(Math.max(currentRemaining, 0.0) * 60);
+
+                // 日付変更チェック
+                String currentDate = plugin.getResetDate();
+                if (!currentDate.equals(currentDates.get(playerId))) {
+                    // 日付が変わったので、新しいカウントを開始
+                    currentDates.put(playerId, currentDate);
+                    // 累積時間を0にリセット
+                    plugin.getStorage().setCumulative(playerId, 0.0);
+                    plugin.savePlayerDataAsync();
+                    cumulativeMinutesMap.put(playerId, 0.0);
+                    // ログイン開始時間を現在時刻にリセット
+                    loginTimes.put(playerId, System.currentTimeMillis());
+                    // ボスバーを更新
+                    double newCumulativeMinutes = 0.0;
+                    double newRemainingMinutes = targetMinutes - newCumulativeMinutes;
+                    int newRemainingSeconds = (int) Math.ceil(Math.max(newRemainingMinutes, 0.0) * 60);
+                    String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(newRemainingSeconds));
+                    bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
+                    bossBar.setProgress(0.0);
+                    // 累積時間をリセット
+                    currentCumulative = 0.0;
+                }
+
+                // ボスバーを更新
+                String updatedTitle = bossBarTitleTemplate.replace("%remaining%", formatTime(currentRemainingSeconds));
+                bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', updatedTitle));
+                bossBar.setProgress(Math.min(currentCumulative / targetMinutes, 1.0));
+
+                // 目標に達したら報酬を与える
+                if (currentCumulative >= targetMinutes) {
+                    giveReward(player, currentDates.get(playerId), true, true);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 20L); // 毎秒
+
+        updateTasks.put(playerId, updateTask);
+    }
+
+    /**
+     * 事前に読み込まれたデータを使用してプレイヤートラッキングを設定する
+     * MySQL使用時に非同期でデータを読み込んだ後、メインスレッドで呼び出される
+     */
+    private void setupPlayerTrackingWithData(Player player, UUID playerId, double cumulativeMinutes, String lastReward) {
+        // 現在のリセット日付を取得
+        String today = plugin.getResetDate();
+        currentDates.put(playerId, today);
+
+        // 累積ログイン時間を設定（事前に読み込み済み）
+        cumulativeMinutesMap.put(playerId, cumulativeMinutes);
+
+        // 目標時間を取得
+        int targetMinutes = plugin.getConfig().getInt("reward-time", 30);
+
+        // 既に達成済みか確認（事前に読み込み済みのlastRewardを使用）
         boolean alreadyRewarded = today.equals(lastReward);
 
         if (alreadyRewarded) {
@@ -158,13 +291,28 @@ public class EventListener implements Listener {
     private void saveCumulativeTime(UUID playerId) {
         Long loginStart = loginTimes.get(playerId);
         if (loginStart == null || loginStart == 0L) return;
-        long start = loginStart;
+        
+        // cumulativeMinutesMapから現在のセッション開始時の累積時間を取得
+        Double baseCumulative = cumulativeMinutesMap.get(playerId);
+        if (baseCumulative == null) {
+            baseCumulative = 0.0;
+        }
+        
         long currentTime = System.currentTimeMillis();
-        double additionalMinutes = (currentTime - start) / 60000.0;
-        double savedCumulative = plugin.getStorage().getCumulative(playerId);
-        double newCumulative = savedCumulative + additionalMinutes;
+        double additionalMinutes = (currentTime - loginStart) / 60000.0;
+        double newCumulative = baseCumulative + additionalMinutes;
+        
+        // 累積時間を保存（MySQL使用時は即座にDBに書き込まれる）
         plugin.getStorage().setCumulative(playerId, newCumulative);
-        plugin.savePlayerDataAsync();
+        
+        // MySQL使用時は同期的に保存が完了するのを待つ（サーバー間移動時のデータ損失を防ぐ）
+        String storageType = plugin.getConfig().getString("storage-type", "yaml").toLowerCase();
+        if (storageType.equals("mysql")) {
+            // MySQLは setCumulative で即座に書き込まれるので追加の待機は不要
+            plugin.getLogger().fine("プレイヤー " + playerId + " の累積時間を保存しました: " + newCumulative + " 分");
+        } else {
+            plugin.savePlayerDataAsync();
+        }
     }
 
     public void giveReward(Player player, String today, boolean setLastReward, boolean updateStreak) {
