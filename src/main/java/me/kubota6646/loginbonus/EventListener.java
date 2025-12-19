@@ -324,6 +324,8 @@ public class EventListener implements Listener {
         if (updateStreak && plugin.getConfig().getBoolean("streak-enabled", true)) {
             // ストリークを計算
             String lastStreakDateStr = plugin.getStorage().getLastStreakDate(playerId);
+            boolean shouldContinueStreak = false;
+            
             if (lastStreakDateStr != null) {
                 LocalDate lastStreakDate;
                 // 日付時刻形式 "YYYY-MM-DD HH:mm" または日付のみ "YYYY-MM-DD" をサポート
@@ -335,17 +337,17 @@ public class EventListener implements Listener {
                     lastStreakDate = LocalDate.parse(lastStreakDateStr);
                 }
                 LocalDate yesterday = LocalDate.now().minusDays(1);
-                if (lastStreakDate.equals(yesterday)) {
-                    // 昨日ログインしていた場合、ストリークを継続
-                    streak = plugin.getStorage().getStreak(playerId) + 1;
-                } else {
-                    // 昨日ログインしていない場合、ストリークをリセット
-                    streak = 1;
-                }
+                shouldContinueStreak = lastStreakDate.equals(yesterday);
+            }
+            
+            if (shouldContinueStreak) {
+                // 昨日ログインしていた場合、ストリークを継続
+                streak = plugin.getStorage().getStreak(playerId) + 1;
             } else {
-                // 初回ログインの場合
+                // 昨日ログインしていない場合、または初回ログインの場合、ストリークをリセット
                 streak = 1;
             }
+            
             plugin.getStorage().setStreak(playerId, streak);
             plugin.getStorage().setLastStreakDate(playerId, today);
         }
