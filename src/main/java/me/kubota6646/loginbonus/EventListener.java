@@ -336,8 +336,15 @@ public class EventListener implements Listener {
                 }
                 LocalDate yesterday = LocalDate.now().minusDays(1);
                 if (lastStreakDate.equals(yesterday)) {
+                    // 昨日ログインしていた場合、ストリークを継続
                     streak = plugin.getStorage().getStreak(playerId) + 1;
+                } else {
+                    // 昨日ログインしていない場合、ストリークをリセット
+                    streak = 1;
                 }
+            } else {
+                // 初回ログインの場合
+                streak = 1;
             }
             plugin.getStorage().setStreak(playerId, streak);
             plugin.getStorage().setLastStreakDate(playerId, today);
