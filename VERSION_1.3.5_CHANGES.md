@@ -1,4 +1,4 @@
-# LoginBonus バージョン 1.3.4 変更点
+# LoginBonus バージョン 1.3.5 変更点
 
 ## リリース日
 2025年
@@ -91,13 +91,13 @@ if (updateStreak && plugin.getConfig().getBoolean("streak-enabled", true)) {
 - この修正により、ログイン間隔が空いた場合、正しくストリークが1にリセットされるようになります
 
 ## バージョン更新
-- `plugin.yml`: version 1.3.3 → 1.3.4
-- `build.gradle`: version 1.3.3 → 1.3.4
+- `plugin.yml`: version 1.3.3 → 1.3.5
+- `build.gradle`: version 1.3.3 → 1.3.5
 
 ## アップグレード方法
 1. サーバーを停止
-2. `plugins/` フォルダ内の古い LoginBonus-1.3.3.jar を削除
-3. 新しい LoginBonus-1.3.4.jar を `plugins/` フォルダに配置
+2. `plugins/` フォルダ内の古い LoginBonus JAR ファイルを削除
+3. 新しい LoginBonus-1.3.5.jar を `plugins/` フォルダに配置
 4. サーバーを起動
 
 既存のプレイヤーデータ（YAML/SQLite/MySQL）はそのまま使用できます。
