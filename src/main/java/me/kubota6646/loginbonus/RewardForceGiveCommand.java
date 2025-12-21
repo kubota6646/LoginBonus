@@ -6,7 +6,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import java.time.LocalDate;
 
 public record RewardForceGiveCommand(Main plugin) implements CommandExecutor {
 
@@ -24,7 +23,8 @@ public record RewardForceGiveCommand(Main plugin) implements CommandExecutor {
         }
 
         String playerName = args[0];
-        String today = LocalDate.now().toString();
+        // リセット時刻を考慮した現在のリセット日付を使用
+        String today = plugin.getResetDate();
 
         // "everyone" キーワードで全プレイヤーを対象
         if (playerName.equalsIgnoreCase("everyone")) {
