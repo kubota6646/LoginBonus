@@ -326,25 +326,35 @@ public class EventListener implements Listener {
             String lastStreakDateStr = plugin.getStorage().getLastStreakDate(playerId);
             boolean shouldContinueStreak = false;
             
-            if (lastStreakDateStr != null) {
+            if (lastStreakDateStr != null && !lastStreakDateStr.isEmpty()) {
+                // 現在のリセット日付から日付部分を取得
+                LocalDate currentResetDate;
+                if (today.length() > 10) {
+                    currentResetDate = LocalDate.parse(today.substring(0, 10));
+                } else {
+                    currentResetDate = LocalDate.parse(today);
+                }
+                
+                // 最後のストリーク日付から日付部分を取得
                 LocalDate lastStreakDate;
-                // 日付時刻形式 "YYYY-MM-DD HH:mm" または日付のみ "YYYY-MM-DD" をサポート
                 if (lastStreakDateStr.length() > 10) {
-                    // 日付時刻形式の場合、日付部分のみを抽出
                     lastStreakDate = LocalDate.parse(lastStreakDateStr.substring(0, 10));
                 } else {
-                    // 日付のみの形式
                     lastStreakDate = LocalDate.parse(lastStreakDateStr);
                 }
-                LocalDate yesterday = LocalDate.now().minusDays(1);
-                shouldContinueStreak = lastStreakDate.equals(yesterday);
+                
+                // 前回のリセット日付を計算（currentResetDateの1日前）
+                LocalDate previousResetDate = currentResetDate.minusDays(1);
+                
+                // 最後のストリーク日付が前回のリセット日付と一致する場合、ストリークを継続
+                shouldContinueStreak = lastStreakDate.equals(previousResetDate);
             }
             
             if (shouldContinueStreak) {
-                // 昨日ログインしていた場合、ストリークを継続
+                // 前回のリセット日にログインしていた場合、ストリークを継続
                 streak = plugin.getStorage().getStreak(playerId) + 1;
             } else {
-                // 昨日ログインしていない場合、または初回ログインの場合、ストリークをリセット
+                // 前回のリセット日にログインしていない場合、または初回ログインの場合、ストリークをリセット
                 streak = 1;
             }
             
