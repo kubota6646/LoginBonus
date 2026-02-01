@@ -295,7 +295,7 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 
 ## 互換性
 
-- **Minecraftバージョン**: 1.19.4 (Spigot API 1.19.4-R0.1-SNAPSHOT)
+- **Minecraftバージョン**: 1.21.8 (Spigot API 1.21.8-R0.1-SNAPSHOT)
 - **Javaバージョン**: 17
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換。
 - **ストレージ**: YAML、SQLite、またはMySQLデータベース。
