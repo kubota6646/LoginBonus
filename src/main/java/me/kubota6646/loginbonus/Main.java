@@ -90,6 +90,9 @@ public class Main extends JavaPlugin {
         lastCheckedDate = getCurrentResetDate();
         startMidnightCheckTask();
 
+        // Plan連携を登録
+        registerPlanDataExtension();
+
         getLogger().info("LoginBonusプラグインが有効化されました。");
         getLogger().info("全プレイヤーのトラッキングを再開します。");
     }
@@ -292,5 +295,25 @@ public class Main extends JavaPlugin {
     private boolean shouldResetToday() {
         String currentResetDate = getCurrentResetDate();
         return !currentResetDate.equals(lastCheckedDate);
+    }
+    
+    /**
+     * Plan Data Extensionを登録
+     */
+    private void registerPlanDataExtension() {
+        try {
+            // Planがインストールされているか確認
+            if (getServer().getPluginManager().getPlugin("Plan") == null) {
+                getLogger().info("Planプラグインが見つかりません。Plan連携は無効です。");
+                return;
+            }
+            
+            // Plan APIを使用してDataExtensionを登録
+            Class.forName("com.djrapitops.plan.extension.DataExtension");
+            com.djrapitops.plan.extension.ExtensionService.getInstance().register(new PlanDataExtension(this));
+            getLogger().info("Plan連携が有効化されました。");
+        } catch (NoClassDefFoundError | IllegalStateException | IllegalArgumentException | ClassNotFoundException e) {
+            getLogger().warning("Plan連携の登録に失敗しました: " + e.getMessage());
+        }
     }
 }
