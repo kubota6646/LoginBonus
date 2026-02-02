@@ -58,6 +58,9 @@ public class PlanDataExtension implements DataExtension {
         List<UUID> allPlayers = storage.getAllPlayerUUIDs();
         
         // ストリーク日数が多い順にソートして上位を表示
+        // Note: getOfflinePlayer()はI/O操作を伴う可能性がありますが、
+        // このテーブルはPlan Web UI表示時のみ生成されるため、
+        // 上位50名に制限されており、パフォーマンスへの影響は限定的です。
         allPlayers.stream()
             .filter(uuid -> storage.getStreak(uuid) > 0) // ストリークが0より大きいプレイヤーのみ
             .sorted((uuid1, uuid2) -> {

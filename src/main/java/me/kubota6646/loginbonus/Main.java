@@ -309,10 +309,9 @@ public class Main extends JavaPlugin {
             }
             
             // Plan APIを使用してDataExtensionを登録
-            Class.forName("com.djrapitops.plan.extension.DataExtension");
             com.djrapitops.plan.extension.ExtensionService.getInstance().register(new PlanDataExtension(this));
             getLogger().info("Plan連携が有効化されました。");
-        } catch (NoClassDefFoundError | IllegalStateException | IllegalArgumentException | ClassNotFoundException e) {
+        } catch (NoClassDefFoundError | IllegalStateException | IllegalArgumentException e) {
             getLogger().warning("Plan連携の登録に失敗しました: " + e.getMessage());
         }
     }
