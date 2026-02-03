@@ -34,7 +34,14 @@ public class MySqlStorage implements StorageInterface {
             this.host = mysqlConfig.getString("host", "localhost");
             this.port = mysqlConfig.getInt("port", 3306);
             this.database = mysqlConfig.getString("database", "loginbonus");
-            this.tableName = mysqlConfig.getString("table-name", "player_data");
+            String configTableName = mysqlConfig.getString("table-name", "player_data");
+            // テーブル名のバリデーション（SQLインジェクション対策）
+            if (!configTableName.matches("^[a-zA-Z0-9_]+$")) {
+                plugin.getLogger().warning("無効なテーブル名: " + configTableName + " - デフォルトの 'player_data' を使用します");
+                this.tableName = "player_data";
+            } else {
+                this.tableName = configTableName;
+            }
             this.username = mysqlConfig.getString("username", "root");
             this.password = mysqlConfig.getString("password", "password");
         }
@@ -84,9 +91,19 @@ public class MySqlStorage implements StorageInterface {
     }
     
     private void reconnectIfNeeded() throws SQLException {
-        if (connection == null || connection.isClosed() || !connection.isValid(1)) {
-            plugin.getLogger().warning("MySQL接続が切断されました。再接続を試みます...");
-            initialize();
+        try {
+            if (connection == null || connection.isClosed() || !connection.isValid(1)) {
+                plugin.getLogger().warning("MySQL接続が切断されました。再接続を試みます...");
+                initialize();
+                // 再接続後も接続が無効な場合は例外をスロー
+                if (connection == null || connection.isClosed()) {
+                    throw new SQLException("MySQL再接続に失敗しました。接続がnullまたは閉じています。");
+                }
+                plugin.getLogger().info("MySQL接続を再確立しました");
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("MySQL再接続に失敗しました: " + e.getMessage());
+            throw e;
         }
     }
     

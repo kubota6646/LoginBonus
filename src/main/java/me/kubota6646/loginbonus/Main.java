@@ -111,9 +111,18 @@ public class Main extends JavaPlugin {
             eventListener.cancelAllTasks();
         }
 
-        // 非同期でデータを保存
+        // 同期的にデータを保存（非同期保存の完了を待つ）
         if (storage != null) {
-            savePlayerDataAsync();
+            try {
+                CompletableFuture<Void> saveFuture = storage.saveAsync();
+                // 最大10秒待機して保存の完了を確実にする
+                saveFuture.get(10, java.util.concurrent.TimeUnit.SECONDS);
+                getLogger().info("プレイヤーデータの保存が完了しました");
+            } catch (java.util.concurrent.TimeoutException e) {
+                getLogger().warning("データ保存がタイムアウトしました: " + e.getMessage());
+            } catch (Exception e) {
+                getLogger().severe("データ保存中にエラーが発生しました: " + e.getMessage());
+            }
             // ストレージを閉じる
             storage.close();
         }
@@ -159,6 +168,11 @@ public class Main extends JavaPlugin {
      */
     public String getMessage(String key, String defaultMessage, String... replacements) {
         String message = messages.getString(key, defaultMessage);
+        // 配列長のバリデーション
+        if (replacements.length % 2 != 0) {
+            getLogger().warning("getMessage: 置換配列の長さが奇数です (key=" + key + ", length=" + replacements.length + ")");
+            // 最後の要素を無視して処理を続ける
+        }
         for (int i = 0; i < replacements.length - 1; i += 2) {
             message = message.replace(replacements[i], replacements[i + 1]);
         }
@@ -175,34 +189,38 @@ public class Main extends JavaPlugin {
             
             if (!messagesFile.exists()) {
                 // ファイルが存在しない場合は、リソースから新規作成
-                java.io.InputStream resourceStream = getResource("message.yml");
-                if (resourceStream != null) {
-                    Files.copy(resourceStream, messagesFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } else {
-                    boolean fileCreated = messagesFile.createNewFile();
-                    if (!fileCreated && !messagesFile.exists()) {
-                        getLogger().warning("message.yml のファイル作成に失敗しました。");
+                try (java.io.InputStream resourceStream = getResource("message.yml")) {
+                    if (resourceStream != null) {
+                        Files.copy(resourceStream, messagesFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } else {
+                        boolean fileCreated = messagesFile.createNewFile();
+                        if (!fileCreated && !messagesFile.exists()) {
+                            getLogger().warning("message.yml のファイル作成に失敗しました。");
+                        }
+                        getLogger().info("message.yml リソースが見つからないため、空のファイルを作成しました。");
                     }
-                    getLogger().info("message.yml リソースが見つからないため、空のファイルを作成しました。");
                 }
             } else {
                 // ファイルが既に存在する場合は、リソースの新しいメッセージを追加
-                java.io.InputStream resourceStream = getResource("message.yml");
-                if (resourceStream != null) {
-                    FileConfiguration defaultMessages = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(resourceStream, java.nio.charset.StandardCharsets.UTF_8));
-                    FileConfiguration existingMessages = YamlConfiguration.loadConfiguration(messagesFile);
-                    
-                    boolean updated = false;
-                    for (String key : defaultMessages.getKeys(false)) {
-                        if (!existingMessages.contains(key)) {
-                            existingMessages.set(key, defaultMessages.get(key));
-                            updated = true;
+                try (java.io.InputStream resourceStream = getResource("message.yml")) {
+                    if (resourceStream != null) {
+                        try (java.io.InputStreamReader reader = new java.io.InputStreamReader(resourceStream, java.nio.charset.StandardCharsets.UTF_8)) {
+                            FileConfiguration defaultMessages = YamlConfiguration.loadConfiguration(reader);
+                            FileConfiguration existingMessages = YamlConfiguration.loadConfiguration(messagesFile);
+                            
+                            boolean updated = false;
+                            for (String key : defaultMessages.getKeys(false)) {
+                                if (!existingMessages.contains(key)) {
+                                    existingMessages.set(key, defaultMessages.get(key));
+                                    updated = true;
+                                }
+                            }
+                            
+                            if (updated) {
+                                existingMessages.save(messagesFile);
+                                getLogger().info("message.yml に新しいメッセージが追加されました。");
+                            }
                         }
-                    }
-                    
-                    if (updated) {
-                        existingMessages.save(messagesFile);
-                        getLogger().info("message.yml に新しいメッセージが追加されました。");
                     }
                 }
             }

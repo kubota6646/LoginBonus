@@ -16,20 +16,20 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EventListener implements Listener {
 
     private final Main plugin;
-    private final Map<UUID, BossBar> bossBars = new HashMap<>();
-    private final Map<UUID, BukkitTask> updateTasks = new HashMap<>();
-    private final Map<UUID, Long> loginTimes = new HashMap<>(); // ログイン開始時間 (ミリ秒)
-    private final Map<UUID, String> currentDates = new HashMap<>(); // 現在の日付
-    private final Map<UUID, Double> cumulativeMinutesMap = new HashMap<>(); // 累積時間
+    private final Map<UUID, BossBar> bossBars = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> updateTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> loginTimes = new ConcurrentHashMap<>(); // ログイン開始時間 (ミリ秒)
+    private final Map<UUID, String> currentDates = new ConcurrentHashMap<>(); // 現在の日付
+    private final Map<UUID, Double> cumulativeMinutesMap = new ConcurrentHashMap<>(); // 累積時間
 
     public EventListener(Main plugin) {
         this.plugin = plugin;
@@ -146,7 +146,9 @@ public class EventListener implements Listener {
                 if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
-                double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
+                Double baseCumulative = cumulativeMinutesMap.get(playerId);
+                if (baseCumulative == null) baseCumulative = 0.0;
+                double currentCumulative = baseCumulative + additionalMinutes;
                 double currentRemaining = targetMinutes - currentCumulative;
                 int currentRemainingSeconds = (int) Math.ceil(Math.max(currentRemaining, 0.0) * 60);
 
@@ -249,7 +251,9 @@ public class EventListener implements Listener {
                 if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
-                double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
+                Double baseCumulative = cumulativeMinutesMap.get(playerId);
+                if (baseCumulative == null) baseCumulative = 0.0;
+                double currentCumulative = baseCumulative + additionalMinutes;
                 double currentRemaining = targetMinutes - currentCumulative;
                 int currentRemainingSeconds = (int) Math.ceil(Math.max(currentRemaining, 0.0) * 60);
 
@@ -351,27 +355,33 @@ public class EventListener implements Listener {
             boolean shouldContinueStreak = false;
             
             if (lastStreakDateStr != null && !lastStreakDateStr.isEmpty()) {
-                // 現在のリセット日付から日付部分を取得
-                LocalDate currentResetDate;
-                if (today.length() > 10) {
-                    currentResetDate = LocalDate.parse(today.substring(0, 10));
-                } else {
-                    currentResetDate = LocalDate.parse(today);
+                try {
+                    // 現在のリセット日付から日付部分を取得
+                    LocalDate currentResetDate;
+                    if (today.length() > 10) {
+                        currentResetDate = LocalDate.parse(today.substring(0, 10));
+                    } else {
+                        currentResetDate = LocalDate.parse(today);
+                    }
+                    
+                    // 最後のストリーク日付から日付部分を取得
+                    LocalDate lastStreakDate;
+                    if (lastStreakDateStr.length() > 10) {
+                        lastStreakDate = LocalDate.parse(lastStreakDateStr.substring(0, 10));
+                    } else {
+                        lastStreakDate = LocalDate.parse(lastStreakDateStr);
+                    }
+                    
+                    // 前回のリセット日付を計算（currentResetDateの1日前）
+                    LocalDate previousResetDate = currentResetDate.minusDays(1);
+                    
+                    // 最後のストリーク日付が前回のリセット日付と一致する場合、ストリークを継続
+                    shouldContinueStreak = lastStreakDate.equals(previousResetDate);
+                } catch (java.time.format.DateTimeParseException e) {
+                    plugin.getLogger().warning("日付の解析に失敗しました (player=" + player.getName() + ", date=" + lastStreakDateStr + "): " + e.getMessage());
+                    // 解析に失敗した場合はストリークを継続しない（リセット）
+                    shouldContinueStreak = false;
                 }
-                
-                // 最後のストリーク日付から日付部分を取得
-                LocalDate lastStreakDate;
-                if (lastStreakDateStr.length() > 10) {
-                    lastStreakDate = LocalDate.parse(lastStreakDateStr.substring(0, 10));
-                } else {
-                    lastStreakDate = LocalDate.parse(lastStreakDateStr);
-                }
-                
-                // 前回のリセット日付を計算（currentResetDateの1日前）
-                LocalDate previousResetDate = currentResetDate.minusDays(1);
-                
-                // 最後のストリーク日付が前回のリセット日付と一致する場合、ストリークを継続
-                shouldContinueStreak = lastStreakDate.equals(previousResetDate);
             }
             
             if (shouldContinueStreak) {
@@ -515,11 +525,17 @@ public class EventListener implements Listener {
 
     public void startTrackingForPlayer(UUID playerId) {
         Player player = plugin.getServer().getPlayer(playerId);
-        if (player == null) return;
+        if (player == null || !player.isOnline()) return;
         startTracking(player);
     }
 
     private void startTracking(Player player) {
+        // オンラインチェック
+        if (!player.isOnline()) {
+            plugin.getLogger().fine("プレイヤー " + player.getName() + " はオフラインのためトラッキングを開始しません");
+            return;
+        }
+        
         UUID playerId = player.getUniqueId();
 
         // 既存のタスクとボスバーをクリア
@@ -582,7 +598,9 @@ public class EventListener implements Listener {
                 if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
-                double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
+                Double baseCumulative = cumulativeMinutesMap.get(playerId);
+                if (baseCumulative == null) baseCumulative = 0.0;
+                double currentCumulative = baseCumulative + additionalMinutes;
                 double currentRemaining = targetMinutes - currentCumulative;
                 int currentRemainingSeconds = (int) Math.ceil(Math.max(currentRemaining, 0.0) * 60);
 
