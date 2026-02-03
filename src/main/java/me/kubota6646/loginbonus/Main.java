@@ -304,11 +304,7 @@ public class Main extends JavaPlugin {
         // PlanHookを使用してPlan連携を登録
         // このアプローチにより、Planがインストールされていない環境でも
         // プラグインが正常にロードされます
-        try {
-            PlanHook planHook = new PlanHook(this);
-            planHook.register();
-        } catch (Exception e) {
-            getLogger().warning("Plan連携の初期化に失敗しました: " + e.getMessage());
-        }
+        PlanHook planHook = new PlanHook(this);
+        planHook.register();
     }
 }

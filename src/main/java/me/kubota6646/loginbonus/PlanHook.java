@@ -42,7 +42,8 @@ public class PlanHook {
             plugin.getLogger().info("Plan連携が有効化されました。");
             return true;
         } catch (ClassNotFoundException e) {
-            plugin.getLogger().info("Planプラグインが見つかりません。Plan連携は無効です。");
+            // Plan APIクラスが見つからない場合（Planが古いバージョンなど）
+            plugin.getLogger().warning("Plan APIが見つかりません: " + e.getMessage());
             return false;
         } catch (Exception e) {
             plugin.getLogger().warning("Plan連携の登録に失敗しました: " + e.getMessage());
