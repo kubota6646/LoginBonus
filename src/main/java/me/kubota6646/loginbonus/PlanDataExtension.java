@@ -70,9 +70,20 @@ public class PlanDataExtension implements DataExtension {
             })
             .limit(50) // 上位50名まで表示
             .forEach(uuid -> {
-                String playerName = plugin.getServer().getOfflinePlayer(uuid).getName();
-                if (playerName == null) {
-                    playerName = uuid.toString();
+                String playerName;
+                try {
+                    org.bukkit.OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(uuid);
+                    // プレイヤーが過去にサーバーに参加したことがある場合のみ名前を取得
+                    if (offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null) {
+                        playerName = offlinePlayer.getName();
+                    } else {
+                        // UUIDの最初の8文字を表示（読みやすくするため）
+                        playerName = uuid.toString().substring(0, 8) + "...";
+                    }
+                } catch (Exception e) {
+                    // エラーが発生した場合はUUIDの短縮版を使用
+                    playerName = uuid.toString().substring(0, 8) + "...";
+                    plugin.getLogger().warning("プレイヤー名の取得に失敗しました: " + uuid + " - " + e.getMessage());
                 }
                 int streak = storage.getStreak(uuid);
                 table.addRow(playerName, streak);
