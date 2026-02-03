@@ -115,8 +115,20 @@ public class EventListener implements Listener {
         String bossBarTitleTemplate = plugin.getConfig().getString("boss-bar-title", "&a報酬まで残り: %remaining%");
         String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
         String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
-        BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
-        BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        BarColor bossBarColor;
+        BarStyle bossBarStyle;
+        try {
+            bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバーカラー: " + bossBarColorStr + " - デフォルトのBLUEを使用します");
+            bossBarColor = BarColor.BLUE;
+        }
+        try {
+            bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバースタイル: " + bossBarStyleStr + " - デフォルトのSOLIDを使用します");
+            bossBarStyle = BarStyle.SOLID;
+        }
         double remainingMinutes = targetMinutes - cumulativeMinutes;
         int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
         String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
@@ -130,8 +142,8 @@ public class EventListener implements Listener {
             @Override
             public void run() {
                 // 現在の累積時間を計算
-                long loginStart = loginTimes.get(playerId);
-                if (loginStart == 0) return;
+                Long loginStart = loginTimes.get(playerId);
+                if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
                 double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
@@ -206,8 +218,20 @@ public class EventListener implements Listener {
         String bossBarTitleTemplate = plugin.getConfig().getString("boss-bar-title", "&a報酬まで残り: %remaining%");
         String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
         String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
-        BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
-        BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        BarColor bossBarColor;
+        BarStyle bossBarStyle;
+        try {
+            bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバーカラー: " + bossBarColorStr + " - デフォルトのBLUEを使用します");
+            bossBarColor = BarColor.BLUE;
+        }
+        try {
+            bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバースタイル: " + bossBarStyleStr + " - デフォルトのSOLIDを使用します");
+            bossBarStyle = BarStyle.SOLID;
+        }
         double remainingMinutes = targetMinutes - cumulativeMinutes;
         int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
         String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
@@ -221,8 +245,8 @@ public class EventListener implements Listener {
             @Override
             public void run() {
                 // 現在の累積時間を計算
-                long loginStart = loginTimes.get(playerId);
-                if (loginStart == 0) return;
+                Long loginStart = loginTimes.get(playerId);
+                if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
                 double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;
@@ -434,7 +458,15 @@ public class EventListener implements Listener {
         for (Map<?, ?> itemMap : items) {
             String itemName = (String) itemMap.get("item");
             if (itemName == null) itemName = (String) itemMap.get("type");
-            int baseAmount = (Integer) itemMap.get("amount");
+            if (itemName == null) {
+                plugin.getLogger().warning("アイテム設定にitem/typeが見つかりません");
+                continue;
+            }
+            Integer baseAmount = (Integer) itemMap.get("amount");
+            if (baseAmount == null) {
+                plugin.getLogger().warning("アイテム " + itemName + " のamountが設定されていません");
+                continue;
+            }
             int amount = baseAmount + extraAmount;
             Material material = Material.getMaterial(itemName.toUpperCase());
             if (material != null) {
@@ -519,8 +551,20 @@ public class EventListener implements Listener {
         String bossBarTitleTemplate = plugin.getConfig().getString("boss-bar-title", "&a報酬まで残り: %remaining%");
         String bossBarColorStr = plugin.getConfig().getString("boss-bar-color", "BLUE");
         String bossBarStyleStr = plugin.getConfig().getString("boss-bar-style", "SOLID");
-        BarColor bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
-        BarStyle bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        BarColor bossBarColor;
+        BarStyle bossBarStyle;
+        try {
+            bossBarColor = BarColor.valueOf(bossBarColorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバーカラー: " + bossBarColorStr + " - デフォルトのBLUEを使用します");
+            bossBarColor = BarColor.BLUE;
+        }
+        try {
+            bossBarStyle = BarStyle.valueOf(bossBarStyleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("無効なボスバースタイル: " + bossBarStyleStr + " - デフォルトのSOLIDを使用します");
+            bossBarStyle = BarStyle.SOLID;
+        }
         double remainingMinutes = targetMinutes - cumulativeMinutes;
         int remainingSeconds = (int) Math.ceil(Math.max(remainingMinutes, 0.0) * 60);
         String title = bossBarTitleTemplate.replace("%remaining%", formatTime(remainingSeconds));
@@ -534,8 +578,8 @@ public class EventListener implements Listener {
             @Override
             public void run() {
                 // 現在の累積時間を計算
-                long loginStart = loginTimes.get(playerId);
-                if (loginStart == 0) return;
+                Long loginStart = loginTimes.get(playerId);
+                if (loginStart == null || loginStart == 0) return;
                 long currentTime = System.currentTimeMillis();
                 double additionalMinutes = (currentTime - loginStart) / 60000.0; // ミリ秒から分に変換
                 double currentCumulative = cumulativeMinutesMap.get(playerId) + additionalMinutes;

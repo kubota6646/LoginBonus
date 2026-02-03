@@ -42,6 +42,11 @@ Minecraft Bukkitプラグインで、ログインボーナスシステムを実�
 - **ストレージタイプ**: `config.yml`でデータストレージをYAML、SQLite、またはMySQLから選択できます。
 - **MySQLテーブル名**: MySQLストレージのテーブル名をカスタマイズ可能。
 
+### Planプラグイン連携
+- **連続ログイン日数の表示**: [Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグインと連携し、プレイヤーの連続ログイン日数をPlanのWeb UIに表示します。
+- **連続ログイン日数ランキング**: Plan上で連続ログイン日数の上位50名をランキング形式で表示します。
+- **自動連携**: Planプラグインがインストールされている場合、自動的に連携が有効化されます。Planプラグインがない場合でも、LoginBonusは正常に動作します。
+
 ## コマンド
 
 ### プレイヤーコマンド
@@ -276,6 +281,7 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 5. SQLiteストレージを使用する場合、SQLite JDBCドライバがサーバーに利用可能であることを確認してください（プラグインにバンドルされています）。
 6. MySQLストレージを使用する場合、MySQLサーバーをセットアップし、config.ymlに接続情報を設定してください。MySQL JDBCドライバが利用可能であることを確認（プラグインにバンドルされています）。
 7. 設定を変更した場合、`/rewardreload` コマンドを使用するか、再びサーバーを再起動します。
+8. （オプション）Planプラグインと連携する場合、[Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグインをインストールしてください。LoginBonusは自動的にPlanと連携し、連続ログイン日数とランキングをPlanのWeb UIに表示します。
 
 ## パーミッション
 
@@ -299,6 +305,7 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 - **Javaバージョン**: 17
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換。
 - **ストレージ**: YAML、SQLite、またはMySQLデータベース。
+- **連携プラグイン**: [Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグイン（オプション）- 連続ログイン日数とランキングをPlanのWeb UIに表示します。
 
 ## 開発
 
