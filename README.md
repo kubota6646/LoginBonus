@@ -301,18 +301,19 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 
 ## 互換性
 
-- **Minecraftバージョン**: 1.21.8 (Spigot API 1.21.8-R0.1-SNAPSHOT)
+- **Minecraftバージョン**: 1.12～1.21.11 (api-version: 1.13で幅広いバージョンをサポート)
 - **Javaバージョン**: 17
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換。
 - **ストレージ**: YAML、SQLite、またはMySQLデータベース。
 - **連携プラグイン**: [Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグイン（オプション）- 連続ログイン日数とランキングをPlanのWeb UIに表示します。
+- **注意**: 一部のアイテム（例: NETHERITE_INGOT）は、古いバージョン（1.16未満）では利用できません。設定ファイルでバージョンに応じたアイテムを指定してください。
 
 ## 開発
 
 - **ソースコード**: GitHubで利用可能。
 - **ビルド**: Gradleを使用してプロジェクトをビルドします。
 - **依存関係**: Spigot APIが必要です。SQLiteストレージを使用する場合、SQLite JDBCドライバが含まれます。MySQLストレージを使用する場合、MySQL JDBCドライバが含まれます。
-- **Minecraftバージョンの変更**: プラグインを別のMinecraftバージョン（例: 1.21.8）に対応させるには、`build.gradle` のSpigot API依存関係を更新し（例: `compileOnly 'org.spigotmc:spigot-api:1.21.3-R0.1-SNAPSHOT'`）、`src/main/resources/plugin.yml` の `api-version` を変更してください（例: `api-version: 1.21`）。また、README.mdの互換性セクションを更新します。MinecraftのAPI変更に注意し、テストを行ってください。（変更の仕方などがよく分からない方はGitHub CopilotなどのAIに質問してみてください）
+- **マルチバージョン対応**: このプラグインは `api-version: 1.13` を使用し、Minecraft 1.12～1.21.11までの幅広いバージョンに対応しています。古いバージョンを使用する場合は、設定ファイルのアイテム名がそのバージョンで利用可能か確認してください（例: NETHERITE_INGOTは1.16以降のみ）。
 
 ## ライセンス
 

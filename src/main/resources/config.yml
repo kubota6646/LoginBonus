@@ -49,6 +49,8 @@ reset-check-interval: 30
 # 報酬アイテムのリスト
 # 各アイテムのMaterial名と個数を指定
 # ストリーク機能が有効の場合、個数がストリーク分加算されます
+# 注意: 古いMinecraftバージョン（1.12-1.15）では、一部の新しいアイテム（NETHERITE_INGOT等）が利用できません
+#       使用しているMinecraftバージョンで利用可能なアイテム名を指定してください
 reward-items:
   - item: DIAMOND
     amount: 1
@@ -65,6 +67,7 @@ streak-enabled: true
 # ================================
 # 特殊ストリーク報酬を有効にするかどうか
 # true: 指定した個別日数での報酬を支給 / false: 無効
+# 注意: 古いMinecraftバージョン（1.12-1.15）では、一部の新しいアイテム（NETHERITE_INGOT、EMERALD等は利用可能）が制限されます
 special_streak_rewards:
   enabled: true
   rewards:

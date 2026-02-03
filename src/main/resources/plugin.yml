@@ -1,7 +1,7 @@
 name: LoginBonus
-version: 1.4.0
+version: 1.4.1
 main: me.kubota6646.loginbonus.Main
-api-version: 1.21
+api-version: 1.13
 author: kubota6646
 description: "ログイン報酬を付与するプラグイン。累積ログイン時間で報酬を受け取り、ストリーク機能で報酬が増えます。"
 softdepend: [Plan]
