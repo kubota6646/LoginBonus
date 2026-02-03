@@ -26,19 +26,24 @@ Minecraft 1.12から1.21.11までの全てのバージョンに対応しまし�
    - PlanHookクラスを導入し、リフレクションを使用してPlan APIを呼び出すように変更
    - これにより、NoClassDefFoundError が発生しなくなりました
 
-4. **ドキュメントの更新**
+4. **Java互換性の修正**
+   - コンパイルターゲットをJava 17からJava 8に変更
+   - これにより、古いMinecraftサーバーでも動作可能に（class file major version 52）
+   - Java 8以上のすべてのバージョンで動作します
+
+5. **ドキュメントの更新**
    - README.md の互換性セクションを更新
    - 古いバージョンでは利用できないアイテム（NETHERITE_INGOT等）に関する注意を追加
 
 ## バージョン更新
 - `plugin.yml`: version 1.4.0 → 1.4.1, api-version 1.21 → 1.13
-- `build.gradle`: version 1.4.0 → 1.4.1
+- `build.gradle`: version 1.4.0 → 1.4.1, Java 17 → Java 8
 
 ## 互換性
 
 ### サポート対象
 - **Minecraftバージョン**: 1.12～1.21.11 (api-version: 1.13で幅広いバージョンをサポート)
-- **Javaバージョン**: 17
+- **Javaバージョン**: 8以上（Java 8で動作、Java 17でも動作確認済み）
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換
 - **連携プラグイン**: Plan (Player Analytics) - オプション
 
@@ -82,6 +87,7 @@ Minecraft 1.12から1.21.11までの全てのバージョンに対応しまし�
 
 ## バグ修正
 - **Plan連携のクラスロード問題を修正**: Planプラグインが存在しない環境で`NoClassDefFoundError`が発生する問題を修正しました。PlanHookクラスを導入し、リフレクションを使用することで、Planがインストールされていない環境でもプラグインが正常にロードされるようになりました。
+- **Javaバージョン互換性を修正**: Java 17でコンパイルされていた問題を修正し、Java 8でコンパイルするように変更しました。これにより、古いMinecraftサーバー（Java 8以上で動作）でもプラグインが正常にロードされるようになりました（class file major version 61 → 52）。
 
 ## セキュリティ
 - CodeQLスキャン実施予定

@@ -302,7 +302,7 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 ## 互換性
 
 - **Minecraftバージョン**: 1.12～1.21.11 (api-version: 1.13で幅広いバージョンをサポート)
-- **Javaバージョン**: 17
+- **Javaバージョン**: 8以上（Java 8で動作、Java 17でも動作確認済み）
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換。
 - **ストレージ**: YAML、SQLite、またはMySQLデータベース。
 - **連携プラグイン**: [Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグイン（オプション）- 連続ログイン日数とランキングをPlanのWeb UIに表示します。
