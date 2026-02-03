@@ -9,7 +9,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public record RewardMigrateCommand(Main plugin) implements CommandExecutor {
+public class RewardMigrateCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardMigrateCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

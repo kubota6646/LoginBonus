@@ -4,10 +4,11 @@ plugins {
 }
 
 group = 'me.kubota6646'
-version = '1.4.0'
+version = '1.4.2'
 
 java {
-    sourceCompatibility = '17'
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {

@@ -7,7 +7,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public record RewardDeletePlayerCommand(Main plugin) implements CommandExecutor {
+public class RewardDeletePlayerCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardDeletePlayerCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

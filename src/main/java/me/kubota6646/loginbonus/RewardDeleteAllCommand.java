@@ -6,7 +6,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public record RewardDeleteAllCommand(Main plugin) implements CommandExecutor {
+public class RewardDeleteAllCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardDeleteAllCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

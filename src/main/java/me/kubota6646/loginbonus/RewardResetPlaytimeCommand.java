@@ -7,7 +7,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public record RewardResetPlaytimeCommand(Main plugin) implements CommandExecutor {
+public class RewardResetPlaytimeCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardResetPlaytimeCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
