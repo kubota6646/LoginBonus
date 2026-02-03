@@ -7,15 +7,22 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
-public record RewardStreakCommand(Main plugin) implements CommandExecutor {
+public class RewardStreakCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardStreakCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage(plugin.getMessage("player-only", "&cこのコマンドはプレイヤーのみ実行可能です。"));
             return true;
         }
-
+        
+        Player player = (Player) sender;
         UUID playerId = player.getUniqueId();
         int streak = plugin.getStorage().getStreak(playerId);
 

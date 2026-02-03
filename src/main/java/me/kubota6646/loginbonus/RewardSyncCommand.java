@@ -8,7 +8,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public record RewardSyncCommand(Main plugin) implements CommandExecutor {
+public class RewardSyncCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardSyncCommand(Main plugin) {
+        this.plugin = plugin;
+    }
     
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -31,11 +37,12 @@ public record RewardSyncCommand(Main plugin) implements CommandExecutor {
         
         // 引数なしの場合は自分自身を同期
         if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
+            if (!(sender instanceof Player)) {
                 sender.sendMessage(plugin.getMessage("sync-console-usage", "&cコンソールからはプレイヤー名を指定してください: /rewardsync <player>"));
                 return true;
             }
             
+            Player player = (Player) sender;
             syncPlayerData(sender, player, storage);
             return true;
         }

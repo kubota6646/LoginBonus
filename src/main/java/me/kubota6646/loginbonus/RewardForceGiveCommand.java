@@ -7,7 +7,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public record RewardForceGiveCommand(Main plugin) implements CommandExecutor {
+public class RewardForceGiveCommand implements CommandExecutor {
+    
+    private final Main plugin;
+    
+    public RewardForceGiveCommand(Main plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
