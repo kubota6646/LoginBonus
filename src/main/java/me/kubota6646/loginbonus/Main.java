@@ -301,18 +301,14 @@ public class Main extends JavaPlugin {
      * Plan Data Extensionを登録
      */
     private void registerPlanDataExtension() {
+        // PlanHookを使用してPlan連携を登録
+        // このアプローチにより、Planがインストールされていない環境でも
+        // プラグインが正常にロードされます
         try {
-            // Planがインストールされているか確認
-            if (getServer().getPluginManager().getPlugin("Plan") == null) {
-                getLogger().info("Planプラグインが見つかりません。Plan連携は無効です。");
-                return;
-            }
-            
-            // Plan APIを使用してDataExtensionを登録
-            com.djrapitops.plan.extension.ExtensionService.getInstance().register(new PlanDataExtension(this));
-            getLogger().info("Plan連携が有効化されました。");
-        } catch (NoClassDefFoundError | IllegalStateException | IllegalArgumentException e) {
-            getLogger().warning("Plan連携の登録に失敗しました: " + e.getMessage());
+            PlanHook planHook = new PlanHook(this);
+            planHook.register();
+        } catch (Exception e) {
+            getLogger().warning("Plan連携の初期化に失敗しました: " + e.getMessage());
         }
     }
 }
