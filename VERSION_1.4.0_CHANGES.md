@@ -22,8 +22,9 @@
    - Planがない場合でも、LoginBonusは正常に動作
 
 3. **依存関係の追加**
-   - `build.gradle`: Plan API 5.6.3196を追加（compileOnly）
+   - `build.gradle`: Plan API 5.6-2965を追加（compileOnly）
    - `plugin.yml`: Planをsoftdependとして追加
+   - 注: ビルド修正で正しいバージョン番号に更新（5.6.3196 → 5.6-2965）
 
 ### バグ修正
 
@@ -43,6 +44,10 @@
    - `giveItems`メソッドでitemNameとbaseAmountのnullチェックを追加
    - 設定が不正な場合、警告を出力してスキップ
    - プラグインのクラッシュを防止
+
+4. **ビルド修正**
+   - Plan依存関係のバージョンを修正（5.6.3196 → 5.6-2965）
+   - 存在しないバージョンによるビルドエラーを解消
 
 ## バージョン更新
 - `plugin.yml`: version 1.3.7 → 1.4.0
