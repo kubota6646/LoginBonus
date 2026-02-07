@@ -15,6 +15,9 @@
 - `BungeePlanExtension`: Planのネットワークページにデータを提供するクラス
 - `BungeePlanHook`: Plan連携を管理するクラス
 
+### ビルド設定
+- **Minecraft Librariesリポジトリを追加**: Bungeecord APIの依存関係（brigadier）を解決するため、`https://libraries.minecraft.net/` を追加しました
+
 ### 設定ファイル
 - `bungee.yml`: Bungeecord版プラグインの基本情報
 - `bungee-config.yml`: Bungeecord版プラグインの設定ファイルテンプレート
