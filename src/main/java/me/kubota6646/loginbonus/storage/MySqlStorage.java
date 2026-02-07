@@ -83,12 +83,18 @@ public class MySqlStorage implements StorageInterface {
                 }
                 
                 // player_name カラムを追加（v1.5.0で追加）
+                // カラムの存在確認をしてから追加
                 try {
-                    stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN player_name VARCHAR(16) AFTER uuid");
-                    plugin.getLogger().info("MySQLテーブルに player_name カラムを追加しました");
+                    DatabaseMetaData metaData = connection.getMetaData();
+                    try (ResultSet columns = metaData.getColumns(null, null, tableName, "player_name")) {
+                        if (!columns.next()) {
+                            // カラムが存在しない場合のみ追加
+                            stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN player_name VARCHAR(16) AFTER uuid");
+                            plugin.getLogger().info("MySQLテーブルに player_name カラムを追加しました");
+                        }
+                    }
                 } catch (SQLException e) {
-                    // カラムがすでに存在する場合は無視
-                    plugin.getLogger().fine("player_name カラムの追加をスキップしました: " + e.getMessage());
+                    plugin.getLogger().fine("player_name カラムの確認/追加に失敗しました: " + e.getMessage());
                 }
             }
             

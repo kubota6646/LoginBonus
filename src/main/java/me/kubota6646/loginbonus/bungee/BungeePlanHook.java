@@ -25,12 +25,12 @@ public class BungeePlanHook {
             }
             
             // リフレクションを使用してPlan APIを呼び出す
+            // ExtensionServiceはPlanプラグインから提供されるためリフレクションが必要
             Class<?> extensionServiceClass = Class.forName("com.djrapitops.plan.extension.ExtensionService");
             Object extensionService = extensionServiceClass.getMethod("getInstance").invoke(null);
             
-            // BungeePlanExtensionのインスタンスを作成
-            Class<?> planExtensionClass = Class.forName("me.kubota6646.loginbonus.bungee.BungeePlanExtension");
-            Object dataExtension = planExtensionClass.getConstructor(BungeeMain.class).newInstance(plugin);
+            // BungeePlanExtensionを直接インスタンス化（同じコードベースなのでリフレクション不要）
+            BungeePlanExtension dataExtension = new BungeePlanExtension(plugin);
             
             // ExtensionServiceに登録
             extensionServiceClass.getMethod("register", Class.forName("com.djrapitops.plan.extension.DataExtension"))
