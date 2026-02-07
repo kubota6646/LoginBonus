@@ -304,9 +304,59 @@ MySQLストレージの場合: 指定されたMySQLデータベースに`playerd
 - **Minecraftバージョン**: 1.12～1.21.11 (api-version: 1.13で幅広いバージョンをサポート)
 - **Javaバージョン**: 8以上（Java 8で動作、Java 17でも動作確認済み）
 - **Bukkit/Spigot/Paper**: 標準的なBukkit実装と互換。
+- **Bungeecord**: 1.20以降（バージョン1.5.0以降で対応）
 - **ストレージ**: YAML、SQLite、またはMySQLデータベース。
 - **連携プラグイン**: [Plan (Player Analytics)](https://github.com/plan-player-analytics/Plan)プラグイン（オプション）- 連続ログイン日数とランキングをPlanのWeb UIに表示します。
+  - **Spigot/Bukkit**: プレイヤーページに連続ログイン日数とランキングを表示
+  - **Bungeecord**: ネットワークページに全サーバーの連続ログイン日数ランキングを表示（バージョン1.5.0以降）
 - **注意**: 一部のアイテム（例: NETHERITE_INGOT）は、古いバージョン（1.16未満）では利用できません。設定ファイルでバージョンに応じたアイテムを指定してください。
+
+## Bungeecord対応（バージョン1.5.0以降）
+
+### 概要
+LoginBonusはBungeecordサーバーにもインストール可能です。Bungeecord版を使用すると、Planのネットワークページに全サーバーの連続ログイン日数ランキングが表示されます。
+
+### インストール方法
+1. **Spigot/Bukkitサーバー**: 通常通りLoginBonusをインストールし、MySQLストレージを使用するように設定します
+2. **Bungeecordサーバー**: 
+   - `LoginBonus.jar`をBungeecordの`plugins/`フォルダに配置
+   - `plugins/LoginBonus/config.yml`を編集し、Spigotサーバーと同じMySQL接続情報を設定
+   - Planプラグインがインストールされていることを確認
+
+### 設定例
+
+#### Spigot/Bukkit サーバーの config.yml
+```yaml
+storage-type: mysql
+mysql:
+  host: localhost
+  port: 3306
+  database: loginbonus
+  table-name: player_data
+  username: root
+  password: your_password
+```
+
+#### Bungeecord サーバーの config.yml
+```yaml
+mysql:
+  host: localhost
+  port: 3306
+  database: loginbonus
+  table-name: player_data
+  username: root
+  password: your_password
+```
+
+### 動作の仕組み
+1. プレイヤーがSpigot/BukkitサーバーでログインするとMySQLに連続ログイン日数が保存されます
+2. Bungeecord版プラグインが定期的にMySQLからデータを読み取ります
+3. Planのネットワークページに全サーバーの連続ログイン日数ランキングが表示されます
+
+### 注意事項
+- Bungeecord版は読み取り専用です。データの更新はSpigot/Bukkitサーバーで行われます
+- Bungeecord版を使用するには、必ずMySQLストレージを使用する必要があります
+- PlanプラグインがBungeecordにインストールされている必要があります
 
 ## 開発
 

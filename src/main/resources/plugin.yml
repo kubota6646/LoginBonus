@@ -1,5 +1,5 @@
 name: LoginBonus
-version: 1.4.2
+version: 1.5.0
 main: me.kubota6646.loginbonus.Main
 api-version: 1.13
 author: kubota6646
@@ -41,6 +41,10 @@ commands:
   rewarddeleteall:
     description: "全プレイヤーのデータを削除するコマンド（OPのみ）"
     usage: "/<command> confirm"
+    permission: "loginbonus.admin"
+  rewardmigratenames:
+    description: "データベース内の空のプレイヤー名を移行するコマンド（OPのみ、MySQLのみ）"
+    usage: "/<command>"
     permission: "loginbonus.admin"
 
 permissions:

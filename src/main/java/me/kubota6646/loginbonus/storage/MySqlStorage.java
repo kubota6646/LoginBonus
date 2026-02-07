@@ -60,6 +60,7 @@ public class MySqlStorage implements StorageInterface {
             // テーブルを作成
             String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                     "uuid VARCHAR(36) PRIMARY KEY," +
+                    "player_name VARCHAR(16)," +
                     "cumulative DOUBLE DEFAULT 0.0," +
                     "last_reward VARCHAR(20)," +
                     "streak INT DEFAULT 1," +
@@ -79,6 +80,21 @@ public class MySqlStorage implements StorageInterface {
                 } catch (SQLException e) {
                     // カラムがすでに正しいサイズか、テーブルが新規作成された場合は無視
                     plugin.getLogger().fine("カラムサイズの更新をスキップしました: " + e.getMessage());
+                }
+                
+                // player_name カラムを追加（v1.5.0で追加）
+                // カラムの存在確認をしてから追加
+                try {
+                    DatabaseMetaData metaData = connection.getMetaData();
+                    try (ResultSet columns = metaData.getColumns(null, null, tableName, "player_name")) {
+                        if (!columns.next()) {
+                            // カラムが存在しない場合のみ追加
+                            stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN player_name VARCHAR(16) AFTER uuid");
+                            plugin.getLogger().info("MySQLテーブルに player_name カラムを追加しました");
+                        }
+                    }
+                } catch (SQLException e) {
+                    plugin.getLogger().fine("player_name カラムの確認/追加に失敗しました: " + e.getMessage());
                 }
             }
             
@@ -394,5 +410,90 @@ public class MySqlStorage implements StorageInterface {
             plugin.getLogger().severe("プレイヤーUUIDリストの取得に失敗しました: " + e.getMessage());
         }
         return uuids;
+    }
+    
+    @Override
+    public synchronized void updatePlayerName(UUID playerId, String playerName) {
+        // INSERT ... ON DUPLICATE KEY UPDATE を使用して、行が存在しない場合は作成、存在する場合は更新
+        // 新規作成時に必要な列も含めて値を設定
+        String sql = "INSERT INTO " + tableName + " (uuid, player_name, cumulative, streak, last_sync) VALUES (?, ?, ?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE player_name = ?, last_sync = ?";
+        try {
+            reconnectIfNeeded();
+            long currentTime = System.currentTimeMillis();
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                // INSERT用の値
+                pstmt.setString(1, playerId.toString());
+                pstmt.setString(2, playerName);
+                pstmt.setDouble(3, 0.0);  // cumulative のデフォルト値
+                pstmt.setInt(4, 1);       // streak のデフォルト値
+                pstmt.setLong(5, currentTime);  // last_sync
+                // UPDATE用の値
+                pstmt.setString(6, playerName);
+                pstmt.setLong(7, currentTime);  // last_sync
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("プレイヤー名の更新に失敗しました: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * データベース内の全プレイヤーのplayer_nameを更新
+     * Bukkitのオフラインプレイヤーキャッシュから名前を取得して更新します
+     * @return 更新されたプレイヤー数
+     */
+    public synchronized int migratePlayerNames() {
+        int updatedCount = 0;
+        java.util.List<UUID> allUUIDs = getAllPlayerUUIDs();
+        
+        plugin.getLogger().info("プレイヤー名の移行を開始します。対象: " + allUUIDs.size() + " 人");
+        
+        for (UUID uuid : allUUIDs) {
+            try {
+                // まず現在のplayer_nameを確認
+                String currentName = getPlayerNameFromDB(uuid);
+                
+                // player_nameが空またはNULLの場合のみ更新
+                if (currentName == null || currentName.isEmpty()) {
+                    // Bukkitのオフラインプレイヤーキャッシュから名前を取得
+                    org.bukkit.OfflinePlayer offlinePlayer = plugin.getServer().getOfflinePlayer(uuid);
+                    
+                    // プレイヤーが過去にサーバーに参加したことがあり、名前が取得できる場合
+                    if (offlinePlayer.hasPlayedBefore() && offlinePlayer.getName() != null) {
+                        String playerName = offlinePlayer.getName();
+                        updatePlayerName(uuid, playerName);
+                        updatedCount++;
+                        plugin.getLogger().info("プレイヤー名を更新: " + uuid + " -> " + playerName);
+                    }
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning("プレイヤー名の移行に失敗 (UUID: " + uuid + "): " + e.getMessage());
+            }
+        }
+        
+        plugin.getLogger().info("プレイヤー名の移行が完了しました。更新数: " + updatedCount + " 人");
+        return updatedCount;
+    }
+    
+    /**
+     * データベースから直接player_nameを取得（キャッシュなし）
+     */
+    private String getPlayerNameFromDB(UUID playerId) {
+        try {
+            reconnectIfNeeded();
+            String sql = "SELECT player_name FROM " + tableName + " WHERE uuid = ?";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, playerId.toString());
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("player_name");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("player_nameの取得に失敗: " + e.getMessage());
+        }
+        return null;
     }
 }

@@ -120,4 +120,13 @@ public interface StorageInterface {
      * @return プレイヤーUUIDのリスト
      */
     java.util.List<UUID> getAllPlayerUUIDs();
+    
+    /**
+     * プレイヤー名を更新（オプション、v1.5.0で追加）
+     * @param playerId プレイヤーのUUID
+     * @param playerName プレイヤー名
+     */
+    default void updatePlayerName(UUID playerId, String playerName) {
+        // デフォルト実装は何もしない（YAML/SQLiteでは不要）
+    }
 }

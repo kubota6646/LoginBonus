@@ -49,6 +49,9 @@ public class EventListener implements Listener {
                 // プレイヤーがまだオンラインか確認
                 if (!player.isOnline()) return;
                 
+                // プレイヤー名を更新（v1.5.0: Bungeecord版での表示用）
+                plugin.getStorage().updatePlayerName(playerId, player.getName());
+                
                 try {
                     boolean synced = plugin.getStorage().syncPlayerData(playerId);
                     if (!synced) {
