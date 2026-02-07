@@ -33,8 +33,12 @@ public class BungeeMain extends Plugin {
         // Plan連携を登録
         registerPlanExtension();
         
+        // デバッグコマンドを登録
+        getProxy().getPluginManager().registerCommand(this, new DebugPlayerNamesCommand(this));
+        
         getLogger().info("LoginBonus (Bungeecord) プラグインが有効化されました。");
         getLogger().info("Planのネットワークページに連続ログイン日数が表示されます。");
+        getLogger().info("デバッグコマンド: /loginbonusdebug");
     }
     
     @Override

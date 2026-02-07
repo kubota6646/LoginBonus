@@ -154,7 +154,12 @@ public class BungeeMySqlReader {
                 stmt.setString(1, playerId.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        return rs.getString("player_name");
+                        String name = rs.getString("player_name");
+                        // デバッグ用: 名前がNULLまたは空の場合はログ出力
+                        if (name == null || name.isEmpty()) {
+                            plugin.getLogger().fine("プレイヤー名が空です (UUID: " + playerId.toString().substring(0, 8) + "...)");
+                        }
+                        return name;
                     }
                 }
             }

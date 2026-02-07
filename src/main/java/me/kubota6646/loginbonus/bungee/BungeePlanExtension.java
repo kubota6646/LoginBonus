@@ -34,7 +34,9 @@ public class BungeePlanExtension implements DataExtension {
     @Override
     public CallEvents[] callExtensionMethodsOn() {
         return new CallEvents[]{
-            CallEvents.SERVER_PERIODICAL
+            CallEvents.SERVER_PERIODICAL,
+            CallEvents.PLAYER_JOIN,
+            CallEvents.PLAYER_LEAVE
         };
     }
     
@@ -42,7 +44,7 @@ public class BungeePlanExtension implements DataExtension {
      * ネットワーク全体の連続ログイン日数ランキングテーブル
      * Planのネットワークページに表示されます
      */
-    @TableProvider(tableColor = Color.LIGHT_GREEN)
+    @TableProvider(tableColor = Color.LIGHT_GREEN, tableName = "consecutive_login_ranking")
     public Table consecutiveLoginRanking() {
         BungeeMySqlReader storage = plugin.getStorage();
         
