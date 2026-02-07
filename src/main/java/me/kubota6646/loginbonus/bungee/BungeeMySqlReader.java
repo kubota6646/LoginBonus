@@ -21,6 +21,7 @@ public class BungeeMySqlReader {
     private final String tableName;
     private final String username;
     private final String password;
+    private final boolean useSSL;
     
     public BungeeMySqlReader(BungeeMain plugin) {
         this.plugin = plugin;
@@ -41,6 +42,11 @@ public class BungeeMySqlReader {
         
         this.username = config.getString("mysql.username", "root");
         this.password = config.getString("mysql.password", "password");
+        this.useSSL = config.getBoolean("mysql.use-ssl", false);
+        
+        if (!this.useSSL && !this.host.equals("localhost") && !this.host.equals("127.0.0.1")) {
+            plugin.getLogger().warning("警告: リモートデータベースへのSSL接続が無効になっています。セキュリティのため有効化を推奨します。");
+        }
     }
     
     /**
@@ -49,8 +55,8 @@ public class BungeeMySqlReader {
     public void initialize() {
         try {
             // MySQL接続URLを構築
-            String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true",
-                    host, port, database);
+            String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=%s&serverTimezone=UTC&allowPublicKeyRetrieval=true",
+                    host, port, database, useSSL);
             
             // 接続を確立
             connection = DriverManager.getConnection(url, username, password);
@@ -82,11 +88,14 @@ public class BungeeMySqlReader {
     
     /**
      * プレイヤーのストリークを取得
+     * Note: テーブル名はコンストラクタで正規表現により厳格に検証されており、
+     * 英数字とアンダースコアのみが許可されているため、SQLインジェクションのリスクは軽減されています。
      */
     public int getStreak(UUID playerId) {
         try {
             reconnectIfNeeded();
             
+            // Note: tableName は正規表現で検証済み（コンストラクタ参照）
             String sql = "SELECT streak FROM " + tableName + " WHERE uuid = ?";
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
                 stmt.setString(1, playerId.toString());
@@ -99,11 +108,13 @@ public class BungeeMySqlReader {
         } catch (SQLException e) {
             plugin.getLogger().warning("ストリークの取得に失敗しました: " + e.getMessage());
         }
-        return 1; // デフォルト値
+        return 0; // プレイヤーが見つからない場合は0を返す
     }
     
     /**
      * 全プレイヤーのUUIDを取得
+     * Note: テーブル名はコンストラクタで正規表現により厳格に検証されており、
+     * 英数字とアンダースコアのみが許可されているため、SQLインジェクションのリスクは軽減されています。
      */
     public List<UUID> getAllPlayerUUIDs() {
         List<UUID> players = new ArrayList<>();

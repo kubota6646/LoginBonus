@@ -16,6 +16,8 @@ mysql:
   table-name: player_data  # テーブル名（Bukkitサーバーと同じ名前を使用）
   username: root
   password: password
+  # SSL接続を使用するかどうか（推奨: true、リモートデータベースの場合は必須）
+  use-ssl: false
   # 接続プール設定
   connection-pool:
     maximum-pool-size: 10

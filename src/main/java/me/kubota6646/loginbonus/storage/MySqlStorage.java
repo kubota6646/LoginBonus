@@ -60,6 +60,7 @@ public class MySqlStorage implements StorageInterface {
             // テーブルを作成
             String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                     "uuid VARCHAR(36) PRIMARY KEY," +
+                    "player_name VARCHAR(16)," +
                     "cumulative DOUBLE DEFAULT 0.0," +
                     "last_reward VARCHAR(20)," +
                     "streak INT DEFAULT 1," +
