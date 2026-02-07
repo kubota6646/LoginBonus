@@ -414,12 +414,15 @@ public class MySqlStorage implements StorageInterface {
     
     @Override
     public synchronized void updatePlayerName(UUID playerId, String playerName) {
-        String sql = "UPDATE " + tableName + " SET player_name = ? WHERE uuid = ?";
+        // INSERT ... ON DUPLICATE KEY UPDATE を使用して、行が存在しない場合は作成、存在する場合は更新
+        String sql = "INSERT INTO " + tableName + " (uuid, player_name) VALUES (?, ?) " +
+                "ON DUPLICATE KEY UPDATE player_name = ?";
         try {
             reconnectIfNeeded();
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, playerName);
-                pstmt.setString(2, playerId.toString());
+                pstmt.setString(1, playerId.toString());
+                pstmt.setString(2, playerName);
+                pstmt.setString(3, playerName);
                 pstmt.executeUpdate();
             }
         } catch (SQLException e) {
