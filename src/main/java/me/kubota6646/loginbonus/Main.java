@@ -84,6 +84,10 @@ public class Main extends JavaPlugin {
         if (rewardDeleteAllCmd != null) {
             rewardDeleteAllCmd.setExecutor(new RewardDeleteAllCommand(this));
         }
+        PluginCommand rewardMigrateNamesCmd = getCommand("rewardmigratenames");
+        if (rewardMigrateNamesCmd != null) {
+            rewardMigrateNamesCmd.setExecutor(new RewardMigrateNamesCommand(this));
+        }
 
         // 日付変更チェックタスクを開始
         String resetTime = getConfig().getString("reset-time", "00:00");
