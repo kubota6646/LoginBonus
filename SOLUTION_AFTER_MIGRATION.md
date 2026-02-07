@@ -78,19 +78,6 @@ CallEvents.PLAYER_LEAVE       // プレイヤー退出時
 - より最新のデータが表示される
 - キャッシュの問題が軽減される
 
-#### B. テーブル名の明示
-```java
-// 以前
-@TableProvider(tableColor = Color.LIGHT_GREEN)
-
-// 現在
-@TableProvider(tableColor = Color.LIGHT_GREEN, tableName = "consecutive_login_ranking")
-```
-
-**効果:**
-- Planのキャッシュ管理が改善される
-- テーブルデータの識別が明確になる
-
 ### 3. デバッグログの追加 📝
 
 **BungeeMySqlReader.getPlayerName()に追加:**

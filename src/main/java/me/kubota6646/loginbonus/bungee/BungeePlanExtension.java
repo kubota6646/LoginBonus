@@ -44,7 +44,7 @@ public class BungeePlanExtension implements DataExtension {
      * ネットワーク全体の連続ログイン日数ランキングテーブル
      * Planのネットワークページに表示されます
      */
-    @TableProvider(tableColor = Color.LIGHT_GREEN, tableName = "consecutive_login_ranking")
+    @TableProvider(tableColor = Color.LIGHT_GREEN)
     public Table consecutiveLoginRanking() {
         BungeeMySqlReader storage = plugin.getStorage();
         

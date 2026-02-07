@@ -226,13 +226,7 @@ Plan DataExtensionが以下のイベントで更新されるようになりま�
 - `PLAYER_JOIN` (プレイヤー参加時)
 - `PLAYER_LEAVE` (プレイヤー退出時)
 
-### 2. テーブル名の明示
-`@TableProvider`に`tableName`パラメータを追加し、Planのキャッシュ管理を改善:
-```java
-@TableProvider(tableColor = Color.LIGHT_GREEN, tableName = "consecutive_login_ranking")
-```
-
-### 3. デバッグコマンド
+### 2. デバッグコマンド
 `/loginbonusdebug`コマンドで簡単に診断可能
 
 ## 推奨される手順
