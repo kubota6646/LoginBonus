@@ -121,6 +121,7 @@ public class BungeeMySqlReader {
         try {
             reconnectIfNeeded();
             
+            // Note: tableName は正規表現で検証済み（コンストラクタ参照）
             String sql = "SELECT uuid FROM " + tableName;
             try (Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
@@ -137,6 +138,30 @@ public class BungeeMySqlReader {
             plugin.getLogger().warning("プレイヤーUUIDの取得に失敗しました: " + e.getMessage());
         }
         return players;
+    }
+    
+    /**
+     * プレイヤー名を取得
+     * @param playerId プレイヤーのUUID
+     * @return プレイヤー名、データベースに存在しない場合はnull
+     */
+    public String getPlayerName(UUID playerId) {
+        try {
+            reconnectIfNeeded();
+            
+            String sql = "SELECT player_name FROM " + tableName + " WHERE uuid = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setString(1, playerId.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("player_name");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("プレイヤー名の取得に失敗しました: " + e.getMessage());
+        }
+        return null;
     }
     
     /**

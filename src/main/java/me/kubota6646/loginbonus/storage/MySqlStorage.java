@@ -81,6 +81,15 @@ public class MySqlStorage implements StorageInterface {
                     // カラムがすでに正しいサイズか、テーブルが新規作成された場合は無視
                     plugin.getLogger().fine("カラムサイズの更新をスキップしました: " + e.getMessage());
                 }
+                
+                // player_name カラムを追加（v1.5.0で追加）
+                try {
+                    stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN player_name VARCHAR(16) AFTER uuid");
+                    plugin.getLogger().info("MySQLテーブルに player_name カラムを追加しました");
+                } catch (SQLException e) {
+                    // カラムがすでに存在する場合は無視
+                    plugin.getLogger().fine("player_name カラムの追加をスキップしました: " + e.getMessage());
+                }
             }
             
             plugin.getLogger().info("MySQLデータベースに接続しました");
@@ -395,5 +404,20 @@ public class MySqlStorage implements StorageInterface {
             plugin.getLogger().severe("プレイヤーUUIDリストの取得に失敗しました: " + e.getMessage());
         }
         return uuids;
+    }
+    
+    @Override
+    public synchronized void updatePlayerName(UUID playerId, String playerName) {
+        String sql = "UPDATE " + tableName + " SET player_name = ? WHERE uuid = ?";
+        try {
+            reconnectIfNeeded();
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, playerName);
+                pstmt.setString(2, playerId.toString());
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("プレイヤー名の更新に失敗しました: " + e.getMessage());
+        }
     }
 }

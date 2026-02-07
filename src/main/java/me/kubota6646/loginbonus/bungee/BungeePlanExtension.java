@@ -64,20 +64,26 @@ public class BungeePlanExtension implements DataExtension {
                 })
                 .limit(50) // 上位50名まで表示
                 .forEach(uuid -> {
-                    // Bungeecordから現在のプレイヤー名を取得を試みる
                     String playerName = null;
-                    try {
-                        net.md_5.bungee.api.connection.ProxiedPlayer player = 
-                            plugin.getProxy().getPlayer(uuid);
-                        if (player != null) {
-                            playerName = player.getName();
+                    
+                    // 1. データベースから保存されたプレイヤー名を取得
+                    playerName = storage.getPlayerName(uuid);
+                    
+                    // 2. データベースに名前がない場合、Bungeecordから現在のプレイヤー名を取得を試みる
+                    if (playerName == null || playerName.isEmpty()) {
+                        try {
+                            net.md_5.bungee.api.connection.ProxiedPlayer player = 
+                                plugin.getProxy().getPlayer(uuid);
+                            if (player != null) {
+                                playerName = player.getName();
+                            }
+                        } catch (Exception e) {
+                            // プレイヤーが見つからない場合は無視
                         }
-                    } catch (Exception e) {
-                        // プレイヤーが見つからない場合は無視
                     }
                     
-                    // プレイヤー名が取得できない場合はUUIDの短縮版を使用
-                    if (playerName == null) {
+                    // 3. どちらからも取得できない場合はUUIDの短縮版を使用
+                    if (playerName == null || playerName.isEmpty()) {
                         playerName = uuid.toString().substring(0, 8) + "...";
                     }
                     
